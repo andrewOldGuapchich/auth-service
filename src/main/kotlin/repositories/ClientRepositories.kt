@@ -10,4 +10,7 @@ import org.springframework.stereotype.Repository
 interface ClientRepositories : JpaRepository<Client, Long> {
     @Query("SELECT * FROM client WHERE amnd_state='A' and login = :login", nativeQuery = true)
     fun findByLogin(@Param("login") login: String): Client?
+
+    @Query("SELECT * FROM client WHERE amnd_state='A' and email_address = :email", nativeQuery = true)
+    fun findByEmail(@Param("email") email: String): Client?
 }

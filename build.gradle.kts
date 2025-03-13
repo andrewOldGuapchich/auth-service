@@ -38,7 +38,9 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
     implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
-    implementation("com.andrew.greenhouse.auth:api:1.0.14-20250309.140516-1")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("com.andrew.greenhouse.auth:api:1.0.24-20250313.190600-1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
     runtimeOnly("org.postgresql:postgresql")
 }
 tasks.test {

@@ -1,5 +1,6 @@
 package com.andrew.greenhouse.auth.controllers
 
+import entities.dto.AuthRequest
 import entities.dto.RegisterRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.PostMapping
@@ -16,4 +17,8 @@ class AuthController(
     @PostMapping("/register")
     fun register(@RequestBody registerRequest: RegisterRequest) =
         authenticationService.registerClientAndTokenGenerate(registerRequest)
+
+    @PostMapping("/authentication")
+    fun authentication(@RequestBody authRequest: AuthRequest) =
+        authenticationService.authentication(authRequest)
 }
