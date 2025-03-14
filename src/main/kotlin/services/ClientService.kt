@@ -6,7 +6,9 @@ import entities.dto.AuthRequest
 import entities.dto.ClientActionRequest
 import entities.dto.RegisterRequest
 import entities.dto.UpdateRequest
+import entities.model.AmndState
 import entities.model.Client
+import entities.model.ClientAction
 import entities.model.Credential
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,6 +47,7 @@ class ClientService @Autowired constructor(
         }
 
         val client = Client(
+            amndState = AmndState.WAITING,
             login = registerRequest.login,
             emailAddress = registerRequest.email,
             messagePayload = createMessagePayload(registerRequest),
@@ -60,7 +63,6 @@ class ClientService @Autowired constructor(
 
         // Отправка письма асинхронно
         mailService.sendMail(registerRequest.email, "Activation code", "sgsg")
-
         return RegisterResponseMessageCode.WAITING_ACTIVATION_CODE
     }
 
