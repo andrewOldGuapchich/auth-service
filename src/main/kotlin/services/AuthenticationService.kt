@@ -42,29 +42,29 @@ class AuthenticationService @Autowired constructor(
         }
     }
 
-    override fun registerClientAndTokenGenerate(registerRequest: RegisterRequest): ResponseEntity<*> {
-        return when (clientService.registerNewClient(registerRequest)) {
-            RegisterResponseMessageCode.ALREADY_EXISTS -> ResponseEntity.badRequest().body(
-                Response(
-                    message = RegisterResponseMessageCode.ALREADY_EXISTS.toString(),
-                    status = HttpStatus.BAD_REQUEST.value()
-                )
-            )
-
-            RegisterResponseMessageCode.PASSWORD_MATCH_ERROR -> ResponseEntity.badRequest().body(
-                Response(
-                    message = RegisterResponseMessageCode.PASSWORD_MATCH_ERROR.toString(),
-                    status = HttpStatus.BAD_REQUEST.value()
-                )
-            )
-
-            RegisterResponseMessageCode.WAITING_ACTIVATION_CODE -> ResponseEntity
-                .ok(
-                Response(
-                    message = RegisterResponseMessageCode.WAITING_ACTIVATION_CODE.toString(),
-                    status = HttpStatus.OK.value()
-                )
-            )
-        }
-    }
+//    override fun registerClientAndTokenGenerate(registerRequest: RegisterRequest): ResponseEntity<*> {
+//        return when (clientService.registerNewClient(registerRequest)) {
+//            RegisterResponseMessageCode.ALREADY_EXISTS -> ResponseEntity.badRequest().body(
+//                Response(
+//                    message = RegisterResponseMessageCode.ALREADY_EXISTS.toString(),
+//                    status = HttpStatus.BAD_REQUEST.value()
+//                )
+//            )
+//
+//            RegisterResponseMessageCode.PASSWORD_MATCH_ERROR -> ResponseEntity.badRequest().body(
+//                Response(
+//                    message = RegisterResponseMessageCode.PASSWORD_MATCH_ERROR.toString(),
+//                    status = HttpStatus.BAD_REQUEST.value()
+//                )
+//            )
+//
+//            RegisterResponseMessageCode.WAITING_ACTIVATION_CODE -> ResponseEntity
+//                .ok(
+//                Response(
+//                    message = RegisterResponseMessageCode.WAITING_ACTIVATION_CODE.toString(),
+//                    status = HttpStatus.OK.value()
+//                )
+//            )
+//        }
+//    }
 }

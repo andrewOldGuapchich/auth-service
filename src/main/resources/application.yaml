@@ -28,10 +28,10 @@ spring:
             enabled: true
             required: true
 
-logging:
-  level:
-    root: INFO
-    org.springframework: DEBUG
+#logging:
+#  level:
+#    root: DEBUG
+#    org.springframework.web: TRACE
 
 eureka:
   client:

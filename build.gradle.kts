@@ -40,7 +40,7 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
-    implementation("com.andrew.greenhouse.auth:api:1.0.25-20250314.161842-1")
+    implementation("com.andrew.greenhouse.auth:api:1.0.31-20250315.171154-1")
     runtimeOnly("org.postgresql:postgresql")
 }
 tasks.test {
