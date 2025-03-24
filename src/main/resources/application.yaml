@@ -1,5 +1,12 @@
 server:
   port: 20102
+  connection-timeout: 60s
+  servlet:
+    context-path: /smart-greenhouse/auth-service/api
+  tomcat:
+    accept-count: 100
+    max-connections: 10000
+
 
 spring:
   autoconfigure:
@@ -27,11 +34,42 @@ spring:
           starttls:
             enabled: true
             required: true
+  #redis config
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 6000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: 10000ms
+  #kafka config
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        spring.json.add.type.headers: false
+        acks: all
+    consumer:
+      group-id: otp-group
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
 
+#
 #logging:
 #  level:
 #    root: DEBUG
 #    org.springframework.web: TRACE
+#    org.apache.kafka.clients: INFO
 
 eureka:
   client:
@@ -48,4 +86,7 @@ jwt:
 smtp:
   mail:
     name: i@andrewkononov.ru
+
+rest:
+  base-url: localhost
 

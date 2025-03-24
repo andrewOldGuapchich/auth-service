@@ -1,15 +1,16 @@
 package com.andrew.greenhouse.auth.services
 
+import com.andrew.greenhouse.auth.services.client.ClientService
 import com.andrew.greenhouse.auth.utils.JwtTokenUtils
 import entities.dto.*
+import entities.dto.client.AuthRequest
+import entities.dto.client.AuthResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import services.AuthenticationService
 import utils.AuthResponseMessageCode
-import utils.ClientActionMessageCode
-import utils.RegisterResponseMessageCode
 
 @Service
 class AuthenticationService @Autowired constructor(
@@ -25,46 +26,25 @@ class AuthenticationService @Autowired constructor(
                     status = HttpStatus.OK.value()
                 )
             )
-
             AuthResponseMessageCode.CLIENT_NOT_FOUND -> ResponseEntity.badRequest().body(
                 Response(
                     message = AuthResponseMessageCode.CLIENT_NOT_FOUND.toString(),
                     status = HttpStatus.BAD_REQUEST.value()
                 )
             )
-
             AuthResponseMessageCode.PASSWORD_INCORRECT -> ResponseEntity.badRequest().body(
                 Response(
                     message = AuthResponseMessageCode.PASSWORD_INCORRECT.toString(),
                     status = HttpStatus.BAD_REQUEST.value()
                 )
             )
+            AuthResponseMessageCode.INTERNAL_ERROR -> ResponseEntity.internalServerError().body(
+                Response(
+                    message = AuthResponseMessageCode.PASSWORD_INCORRECT.toString(),
+                    status = HttpStatus.INTERNAL_SERVER_ERROR.value()
+                )
+            )
         }
     }
-
-//    override fun registerClientAndTokenGenerate(registerRequest: RegisterRequest): ResponseEntity<*> {
-//        return when (clientService.registerNewClient(registerRequest)) {
-//            RegisterResponseMessageCode.ALREADY_EXISTS -> ResponseEntity.badRequest().body(
-//                Response(
-//                    message = RegisterResponseMessageCode.ALREADY_EXISTS.toString(),
-//                    status = HttpStatus.BAD_REQUEST.value()
-//                )
-//            )
-//
-//            RegisterResponseMessageCode.PASSWORD_MATCH_ERROR -> ResponseEntity.badRequest().body(
-//                Response(
-//                    message = RegisterResponseMessageCode.PASSWORD_MATCH_ERROR.toString(),
-//                    status = HttpStatus.BAD_REQUEST.value()
-//                )
-//            )
-//
-//            RegisterResponseMessageCode.WAITING_ACTIVATION_CODE -> ResponseEntity
-//                .ok(
-//                Response(
-//                    message = RegisterResponseMessageCode.WAITING_ACTIVATION_CODE.toString(),
-//                    status = HttpStatus.OK.value()
-//                )
-//            )
-//        }
-//    }
 }
+

@@ -23,7 +23,7 @@ class SecurityConfig {
             .csrf { it.disable() }
             .cors { it.disable() }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/registration/**").permitAll()
+                auth.requestMatchers("/create-client", "/activation-client/**").permitAll()
                     .anyRequest().authenticated()
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }

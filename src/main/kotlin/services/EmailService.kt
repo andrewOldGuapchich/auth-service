@@ -20,12 +20,10 @@ class EmailService(
     @Autowired private var mailSender: JavaMailSender
 ) : EmailService {
 
-    //override fun generateCode(): Number = Random.nextInt(100000, 1000000)
-
     override fun sendMail(email: String, text: String) {
         CoroutineScope(Dispatchers.IO).launch {
             val message = SimpleMailMessage().apply {
-                from = email
+                from = name
                 setTo(email)
                 this.subject = "Greenhouse verification"
                 this.text = text

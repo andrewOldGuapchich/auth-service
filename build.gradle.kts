@@ -11,14 +11,15 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    maven {
-        url = uri("http://localhost:8081/repository/SMART_GREENHOUSE_SNAPSHOT/")
-        credentials {
-            username = "admin"
-            password = "Andrew5525613"
-        }
-        isAllowInsecureProtocol = true
-    }
+    mavenLocal()
+//    maven {
+//        url = uri("http://localhost:8081/repository/SMART_GREENHOUSE_SNAPSHOT/")
+//        credentials {
+//            username = "admin"
+//            password = "Andrew5525613"
+//        }
+//        isAllowInsecureProtocol = true
+//    }
 }
 
 dependencyManagement {
@@ -33,14 +34,20 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
-    implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
-    implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
-    implementation("com.andrew.greenhouse.auth:api:1.0.31-20250315.171154-1")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
+    implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
+    implementation("io.lettuce:lettuce-core:6.5.5.RELEASE")
+    implementation("org.springframework.kafka:spring-kafka:3.3.3")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
+    //implementation("com.andrew.greenhouse.auth:api:1.0.36-20250316.140216-1")
+    implementation("com.andrew.greenhouse.auth:auth-api:1.0-SNAPSHOT")
     runtimeOnly("org.postgresql:postgresql")
 }
 tasks.test {

@@ -1,6 +1,6 @@
 package com.andrew.greenhouse.auth.controllers
 
-import entities.dto.AuthRequest
+import entities.dto.client.AuthRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
