@@ -1,26 +1,26 @@
-package com.andrew.greenhouse.auth.services.action
+package com.andrew.greenhouse.auth.services.client_L1
 
-import com.andrew.greenhouse.auth.services.client.ClientService
 import com.andrew.greenhouse.auth.utils.JwtTokenUtils
-import entities.dto.*
-import entities.dto.client.ClientActionRequest
-import entities.dto.client.RegisterRequest
-import entities.dto.client.RegisterResponse
-import entities.dto.client.UpdateRequest
+import greenhouse_api.Response
+import greenhouse_api.auth_service.entities.dto.client.ClientActionRequest
+import greenhouse_api.auth_service.entities.dto.client.RegisterRequest
+import greenhouse_api.auth_service.entities.dto.client.RegisterResponse
+import greenhouse_api.auth_service.entities.dto.client.UpdateRequest
+import greenhouse_api.auth_service.services.ClientServiceL1
+import greenhouse_api.auth_service.services.ClientServiceL2
+import greenhouse_api.utills.ClientActionMessageCode
+import greenhouse_api.utills.RegisterResponseMessageCode
+import greenhouse_api.utills.UpdateResponseMessageCode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import services.RegisterService
-import utils.ClientActionMessageCode
-import utils.RegisterResponseMessageCode
-import utils.UpdateResponseMessageCode
 
 @Service
-class RegisterService @Autowired constructor(
+class ClientServiceL1 @Autowired constructor(
     private val jwtTokenUtils: JwtTokenUtils,
-    private val clientService: ClientService
-): RegisterService{
+    private val clientService: ClientServiceL2
+): ClientServiceL1 {
     override fun registerClient(registerRequest: RegisterRequest): ResponseEntity<*> {
         return when (clientService.registerNewClient(registerRequest)) {
             RegisterResponseMessageCode.ALREADY_EXISTS -> ResponseEntity.badRequest().body(
@@ -107,7 +107,12 @@ class RegisterService @Autowired constructor(
                     )
                 )
             }
-            ClientActionMessageCode.SUCCESSFULLY_UPDATE -> ResponseEntity.ok("sdfgdg")
+            ClientActionMessageCode.SUCCESSFULLY_UPDATE -> ResponseEntity.ok(
+                Response(
+                    message = ClientActionMessageCode.SUCCESSFULLY_UPDATE.toString(),
+                    status = HttpStatus.OK.value(),
+                )
+            )
             ClientActionMessageCode.INTERNAL_ERROR -> ResponseEntity.internalServerError().body(
                 Response(
                     message = ClientActionMessageCode.INTERNAL_ERROR.toString(),

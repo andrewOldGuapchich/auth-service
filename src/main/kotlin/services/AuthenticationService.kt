@@ -1,21 +1,21 @@
 package com.andrew.greenhouse.auth.services
 
-import com.andrew.greenhouse.auth.services.client.ClientService
 import com.andrew.greenhouse.auth.utils.JwtTokenUtils
-import entities.dto.*
-import entities.dto.client.AuthRequest
-import entities.dto.client.AuthResponse
+import greenhouse_api.Response
+import greenhouse_api.auth_service.entities.dto.client.AuthRequest
+import greenhouse_api.auth_service.entities.dto.client.AuthResponse
+import greenhouse_api.auth_service.services.AuthenticationService
+import greenhouse_api.auth_service.services.ClientServiceL2
+import greenhouse_api.utills.AuthResponseMessageCode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import services.AuthenticationService
-import utils.AuthResponseMessageCode
 
 @Service
 class AuthenticationService @Autowired constructor(
     private val jwtTokenUtils: JwtTokenUtils,
-    private val clientService: ClientService
+    private val clientService: ClientServiceL2
 ) : AuthenticationService {
     override fun authentication(authRequest: AuthRequest): ResponseEntity<*> {
         return when (clientService.findClientByLogin(authRequest)) {

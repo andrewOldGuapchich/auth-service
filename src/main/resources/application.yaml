@@ -80,7 +80,7 @@ jwt:
   token:
     secret:
       access: 984hg493gh0439rthr0429uruj2309yh937gc763fe87t3f89723gf
-    duration: 60
+    duration: 600
 
 #SMTP Config
 smtp:

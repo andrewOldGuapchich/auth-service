@@ -1,8 +1,6 @@
-package com.andrew.greenhouse.auth.services.client
+package com.andrew.greenhouse.auth.services.client_L2
 
-import MessagePayload
 import com.andrew.greenhouse.auth.repositories.ClientRepositories
-import com.andrew.greenhouse.auth.services.OtpService
 import com.andrew.greenhouse.auth.services.kafka.ProducerService
 import com.andrew.greenhouse.auth.utils.RestHandler
 import com.andrew.greenhouse.auth.utils.Topic
@@ -10,43 +8,46 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import entities.dto.client.AuthRequest
-import entities.dto.client.ClientActionRequest
-import entities.dto.client.RegisterRequest
-import entities.dto.client.UpdateRequest
-import entities.dto.stream.ClientNtfActionStreaming
-import entities.model.*
+import greenhouse_api.MessagePayload
+import greenhouse_api.auth_service.entities.builder.ClientBuilder
+import greenhouse_api.auth_service.entities.builder.ClientParams
+import greenhouse_api.auth_service.entities.builder.CredentialParams
+import greenhouse_api.auth_service.entities.dto.client.AuthRequest
+import greenhouse_api.auth_service.entities.dto.client.ClientActionRequest
+import greenhouse_api.auth_service.entities.dto.client.RegisterRequest
+import greenhouse_api.auth_service.entities.dto.client.UpdateRequest
+import greenhouse_api.auth_service.entities.model.AmndState
+import greenhouse_api.auth_service.entities.model.Client
+import greenhouse_api.auth_service.entities.model.ClientAction
+import greenhouse_api.auth_service.entities.model.Credential
+import greenhouse_api.auth_service.services.ClientServiceL2
 import jakarta.transaction.Transactional
-import org.hibernate.sql.Update
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.function.client.WebClient
-import reactor.core.publisher.Mono
-import services.ClientService
-import utils.*
-import kotlin.math.log
+import greenhouse_api.kafka_messages.ClientNtfActionStreaming
+import greenhouse_api.utills.AuthResponseMessageCode
+import greenhouse_api.utills.ClientActionMessageCode
+import greenhouse_api.utills.RegisterResponseMessageCode
+import greenhouse_api.utills.UpdateResponseMessageCode
 
 @Service
-class ClientService @Autowired constructor(
+class ClientServiceL2 @Autowired constructor(
     private val clientRepositories: ClientRepositories,
     private val passwordEncoder: PasswordEncoder,
-    private val otpService: OtpService,
     private val producerService: ProducerService,
     private val restHandler: RestHandler
-) : ClientService {
-    private val logger = LoggerFactory.getLogger(ClientService::class.java)
+) : ClientServiceL2 {
+    private val logger = LoggerFactory.getLogger(ClientServiceL2::class.java)
     private val objectMapper: ObjectMapper = jacksonObjectMapper()
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-
 
     override fun clientAction(clientActionRequest: ClientActionRequest): ClientActionMessageCode {
         try {
             val prevClient = clientRepositories.findWaitingClient(clientActionRequest.login)
                 ?: return ClientActionMessageCode.CLIENT_NOT_FOUND
-
             val otp = getOtp(clientActionRequest.login)?.otp
                 ?: return ClientActionMessageCode.CODE_IS_EXPIRED
             return if (otp != clientActionRequest.verifyCode)
@@ -54,32 +55,22 @@ class ClientService @Autowired constructor(
             else {
                 when (clientActionRequest.action) {
                     ClientAction.CREATE -> {
-                        val activeClient = Client(
-                            amndState = AmndState.ACTIVE,
-                            login = prevClient.login,
-                            emailAddress = prevClient.emailAddress,
-                            messagePayload = prevClient.messagePayload,
-                            action = ClientAction.CREATE,
-                            prevClient = prevClient
-                        )
-                        activeClient.verificationData = mutableListOf(
-                            OtpArchive(
-                                client = activeClient,
-                                createDate = prevClient.amndDate,
-                                expireDate = prevClient.amndDate?.plusMinutes(10),
-                                amndState = AmndState.INACTIVE,
-                                clientEmail = activeClient.emailAddress,
-                                verifyCode = clientActionRequest.verifyCode,
-                                action = ClientAction.CREATE
-                            )
-                        )
-                        otpService.deleteOtp(activeClient.login)
-
+                        val activeClient = createClient {
+                            amndState = AmndState.WAITING
+                            login = prevClient.login
+                            emailAddress = prevClient.emailAddress
+                            messagePayload = prevClient.messagePayload
+                            action = ClientAction.CREATE
+                        }
                         save(activeClient)
                         ClientActionMessageCode.SUCCESSFULLY_CREATE
                     }
 
                     ClientAction.UPDATE -> {
+                        prevClient.amndState = AmndState.ACTIVE
+                        prevClient.credentials.first().amndState = AmndState.ACTIVE
+
+                        save(prevClient)
                         ClientActionMessageCode.SUCCESSFULLY_UPDATE
                     }
 
@@ -102,6 +93,27 @@ class ClientService @Autowired constructor(
         else AuthResponseMessageCode.SUCCESSFULLY_AUTHENTICATE
     }
 
+    override fun createClient(clientBuilder: ClientBuilder): Client {
+        val clientParams = ClientParams().apply(clientBuilder)
+        return Client(
+            amndState = clientParams.amndState,
+            login = clientParams.login,
+            emailAddress = clientParams.emailAddress,
+            messagePayload = clientParams.messagePayload,
+            action = ClientAction.CREATE
+        ).apply {
+            clientParams.credentials?.let { cred ->
+                val credentialParams = CredentialParams().apply(cred)
+                credentials.add(
+                    Credential(
+                        passwordHash = credentialParams.passwordHash,
+                        client = this
+                    )
+                )
+            }
+        }
+    }
+
     override fun registerNewClient(registerRequest: RegisterRequest): RegisterResponseMessageCode {
         try {
             if (listOf(
@@ -113,20 +125,17 @@ class ClientService @Autowired constructor(
             if (registerRequest.password != registerRequest.passwordConfirm)
                 return RegisterResponseMessageCode.PASSWORD_MATCH_ERROR
 
-            val client = Client(
-                amndState = AmndState.WAITING,
-                login = registerRequest.login,
-                emailAddress = registerRequest.email,
-                messagePayload = createMessagePayload(registerRequest),
+            val client = createClient {
+                amndState = AmndState.WAITING
+                login = registerRequest.login
+                emailAddress = registerRequest.email
+                messagePayload = createMessagePayload(registerRequest)
                 action = ClientAction.CREATE
-            ).apply {
-                credentials = mutableListOf(
-                    Credential(
-                        passwordHash = passwordEncoder.encode(registerRequest.password),
-                        client = this
-                    )
-                )
+                credentials = {
+                    passwordHash = passwordEncoder.encode(registerRequest.password)
+                }
             }
+
             save(client)
             createKafkaMessage(registerRequest)?.let {
                 producerService.sendMessage(Topic.OTP_TOPIC_OUTGOING, it)
@@ -141,22 +150,21 @@ class ClientService @Autowired constructor(
     override fun updateClientPassword(updateRequest: UpdateRequest): UpdateResponseMessageCode {
         val oldClient = clientRepositories.findByLogin(updateRequest.login)
             ?: return UpdateResponseMessageCode.PASSWORD_MATCH_ERROR
-        val updateClient = Client(
-            amndState = AmndState.ACTIVE,
-            login = oldClient.login,
-            emailAddress = oldClient.emailAddress,
-            messagePayload = oldClient.messagePayload,
-            prevClient = oldClient,
+
+        val updateClient = createClient {
+            amndState = AmndState.WAITING
+            login = oldClient.login
+            emailAddress = oldClient.emailAddress
+            messagePayload = oldClient.messagePayload
             action = ClientAction.UPDATE
-        ).apply {
-            credentials = mutableListOf(
-                Credential(
-                    passwordHash = passwordEncoder.encode(updateRequest.newPassword),
-                    client = this
-                )
-            )
+            credentials = {
+                passwordHash = passwordEncoder.encode(updateRequest.newPassword)
+            }
         }
-        oldClient.amndState = AmndState.INACTIVE
+
+        createKafkaMessage(updateRequest)?.let {
+            producerService.sendMessage(Topic.OTP_TOPIC_OUTGOING, it)
+        }
         clientRepositories.save(updateClient)
         return UpdateResponseMessageCode.WAITING_VERIFICATION_CODE
     }
@@ -169,35 +177,19 @@ class ClientService @Autowired constructor(
                 action = ClientAction.DELETE,
                 login = prevClient.login,
                 emailAddress = prevClient.emailAddress
-            ).apply {
-                verificationData = mutableListOf(
-                    OtpArchive(
-                        client = this,
-                        createDate = prevClient.amndDate,
-                        expireDate = prevClient.amndDate?.plusMinutes(10),
-                        amndState = AmndState.INACTIVE,
-                        clientEmail = this.emailAddress,
-                        verifyCode = clientActionRequest.verifyCode,
-                        action = ClientAction.CREATE
-                    )
-                )
-            }
+            )
         )
     }
 
-    @Transactional
-    private fun save(client: Client) = clientRepositories.save(client)
-
-    fun getOtp(login: String) = restHandler.get {
+    private fun getOtp(login: String) = restHandler.get {
         endpoint = "/smart-greenhouse-ntf/get-otp"
         params = mutableMapOf("login" to login)
         port = 20103
         bodyClass = OtpClientDto::class.java
     }
 
-
     private fun createMessagePayload(request: RegisterRequest):String {
-        val maskedRequest = request.copy(password = "****", passwordConfirm = "*****")
+        val maskedRequest = request.copy(password = "*****", passwordConfirm = "*****")
         return objectMapper.writeValueAsString(MessagePayload(request = maskedRequest))
     }
 
@@ -213,7 +205,7 @@ class ClientService @Autowired constructor(
             is UpdateRequest -> MessagePayload(
                 request = ClientNtfActionStreaming(
                     login = request.login,
-                    mail = "",
+                    mail = request.email,
                     action = ClientAction.UPDATE
                 )
             )
@@ -227,8 +219,12 @@ class ClientService @Autowired constructor(
             null
         }
     }
+
+    @Transactional
+    private fun save(client: Client) = clientRepositories.save(client)
 }
 
+//вынести в ntf-api
 data class OtpClientDto(
     val login: String,
     val otp: String?,
