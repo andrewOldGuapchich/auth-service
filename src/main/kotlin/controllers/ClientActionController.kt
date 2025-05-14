@@ -27,5 +27,4 @@ class ClientActionController(
     fun updatePassword(
         @RequestBody updateRequest: UpdateRequest
     ) = clientService.updateClient(updateRequest)
-
 }

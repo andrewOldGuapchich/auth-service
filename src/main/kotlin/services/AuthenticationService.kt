@@ -6,7 +6,7 @@ import greenhouse_api.auth_service.entities.dto.client.AuthRequest
 import greenhouse_api.auth_service.entities.dto.client.AuthResponse
 import greenhouse_api.auth_service.services.AuthenticationService
 import greenhouse_api.auth_service.services.ClientServiceL2
-import greenhouse_api.utills.AuthResponseMessageCode
+import greenhouse_api.utils.AuthResponseMessageCode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

@@ -47,7 +47,7 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka:3.3.3")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
     //implementation("com.andrew.greenhouse.auth:api:1.0.36-20250316.140216-1")
-    implementation("com.andrew.greenhouse.auth:auth-api:1.0-SNAPSHOT")
+    implementation("com.andrew.greenhouse.api:api:1.0-SNAPSHOT")
     runtimeOnly("org.postgresql:postgresql")
 }
 tasks.test {

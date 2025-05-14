@@ -1,6 +1,6 @@
 package com.andrew.greenhouse.auth.utils
 
-import greenhouse_api.utills.TokenState
+import greenhouse_api.utils.TokenState
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys

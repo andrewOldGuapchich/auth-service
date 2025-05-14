@@ -1,6 +1,7 @@
 package com.andrew.greenhouse.auth.services.client_L1
 
 import com.andrew.greenhouse.auth.utils.JwtTokenUtils
+import com.andrew.greenhouse.auth.utils.LogUtil
 import greenhouse_api.Response
 import greenhouse_api.auth_service.entities.dto.client.ClientActionRequest
 import greenhouse_api.auth_service.entities.dto.client.RegisterRequest
@@ -8,9 +9,10 @@ import greenhouse_api.auth_service.entities.dto.client.RegisterResponse
 import greenhouse_api.auth_service.entities.dto.client.UpdateRequest
 import greenhouse_api.auth_service.services.ClientServiceL1
 import greenhouse_api.auth_service.services.ClientServiceL2
-import greenhouse_api.utills.ClientActionMessageCode
-import greenhouse_api.utills.RegisterResponseMessageCode
-import greenhouse_api.utills.UpdateResponseMessageCode
+import greenhouse_api.utils.ClientActionMessageCode
+import greenhouse_api.utils.RegisterResponseMessageCode
+import greenhouse_api.utils.UpdateResponseMessageCode
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -19,8 +21,10 @@ import org.springframework.stereotype.Service
 @Service
 class ClientServiceL1 @Autowired constructor(
     private val jwtTokenUtils: JwtTokenUtils,
-    private val clientService: ClientServiceL2
+    private val clientService: ClientServiceL2,
+    private val logUtil: LogUtil
 ): ClientServiceL1 {
+    private val logger = LoggerFactory.getLogger(ClientServiceL1::class.java)
     override fun registerClient(registerRequest: RegisterRequest): ResponseEntity<*> {
         return when (clientService.registerNewClient(registerRequest)) {
             RegisterResponseMessageCode.ALREADY_EXISTS -> ResponseEntity.badRequest().body(
